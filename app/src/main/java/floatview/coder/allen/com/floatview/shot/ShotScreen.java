@@ -6,28 +6,20 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.hardware.display.DisplayManager;
 import android.hardware.display.VirtualDisplay;
-import android.media.Image;
 import android.media.ImageReader;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
 import android.net.Uri;
 import android.os.Build;
-import android.os.Environment;
-import android.support.annotation.RequiresApi;
+import android.os.Handler;
 import android.util.Log;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.ByteBuffer;
 
 import floatview.coder.allen.com.floatview.GlobalContext;
-import floatview.coder.allen.com.floatview.ResultActivity;
+import floatview.coder.allen.com.floatview.utils.CheckUtils;
 import floatview.coder.allen.com.floatview.utils.DeviceInfor;
-import rx.Observable;
-import rx.Observer;
-import rx.Subscriber;
+import floatview.coder.allen.com.floatview.utils.ShotUtils;
 
 import static android.content.ContentValues.TAG;
 
@@ -45,31 +37,25 @@ public class ShotScreen {
     private int mResultCode;
     private VirtualDisplay mVirtualDisplay;
 
-    public void preShot() {
+
+    public ShotScreen() {
         createVirtualEnvironment();
     }
 
 
     public void startShotScreen() {
         startVirtual();
-        startCapture()
-                .subscribe(new Observer<String>() {
+        new Handler()
+                .postDelayed(new Runnable() {
                     @Override
-                    public void onCompleted() {
-
+                    public void run() {
+                        String filePath = startCapture();
+                        if (!CheckUtils.isNullString(filePath)) {
+                            sendMediaFile(filePath);
+                            ShotManager.news().getResutHandler().onCutResutHandler(filePath);
+                        }
                     }
-
-                    @Override
-                    public void onError(Throwable e) {
-
-                    }
-
-                    @Override
-                    public void onNext(String s) {
-                        sendMediaFile(s);
-                        OpenFile(s);
-                    }
-                });
+                }, 500);
     }
 
 
@@ -78,16 +64,7 @@ public class ShotScreen {
         //ImageFormat.RGB_565
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             mImageReader = ImageReader.newInstance(DeviceInfor.getSW(), DeviceInfor.getSH(), 0x1, 2);
-        } else {
-
         }
-    }
-
-
-    private String getCutPath() {
-        String pathImage = Environment.getExternalStorageDirectory().getPath() + "/Pictures/";
-        String nameImage = pathImage + "shot_" + System.currentTimeMillis() + ".png";
-        return nameImage;
     }
 
 
@@ -107,7 +84,6 @@ public class ShotScreen {
         mResultCode = ShotManager.news().getResultCode();
         mMediaProjectionManager1 = ShotManager.news().getmMediaProjectionManager();
         mMediaProjection = mMediaProjectionManager1.getMediaProjection(mResultCode, mResultData);
-        Log.i(TAG, "mMediaProjection defined");
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
@@ -115,54 +91,20 @@ public class ShotScreen {
         mVirtualDisplay = mMediaProjection.createVirtualDisplay("screen-mirror",
                 DeviceInfor.getSW(), DeviceInfor.getSH(), DeviceInfor.getDensityDpi(), DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
                 mImageReader.getSurface(), null, null);
-        Log.i(TAG, "virtual displayed");
     }
 
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    private Observable<String> startCapture() {
-        return Observable.create(new Observable.OnSubscribe<String>() {
-            @Override
-            public void call(Subscriber<? super String> subscriber) {
-                Bitmap bitmap = readImageToBitmap();
-                String filePath = saveBitmap(bitmap);
-                if (filePath != null && !filePath.equals("")) {
-                    subscriber.onNext(filePath);
-                }
-            }
-        });
-    }
-
-    private String saveBitmap(Bitmap bitmap) {
-        String filePath = getCutPath();
-        if (bitmap != null) {
-            try {
-                File fileImage = new File(filePath);
-                if (!fileImage.exists()) {
-                    fileImage.createNewFile();
-                    Log.i(TAG, "image file created");
-                }
-                FileOutputStream out = new FileOutputStream(fileImage);
-                if (out != null) {
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
-                    out.flush();
-                    out.close();
-                }
-                return filePath;
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+    private String startCapture() {
+        Bitmap bitmap = null;
+        String filePath = null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+            bitmap = ShotUtils.readImageToBitmap(mImageReader);
+            filePath = ShotUtils.saveBitmap(bitmap);
+            stopVirtual();
         }
-        return "";
+
+        return filePath;
     }
 
-    private void OpenFile(String filePath) {
-        Intent intent = new Intent(GlobalContext.getContext(), ResultActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        intent.putExtra("file", filePath);
-        GlobalContext.getContext().startActivity(intent);
-    }
 
     private void sendMediaFile(String filePath) {
         File fileImage = new File(filePath);
@@ -173,32 +115,14 @@ public class ShotScreen {
     }
 
 
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private void stopVirtual() {
         if (mVirtualDisplay == null) {
             return;
         }
-        mVirtualDisplay.release();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            mVirtualDisplay.release();
+        }
         mVirtualDisplay = null;
-        Log.i(TAG, "virtual display stopped");
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-    private Bitmap readImageToBitmap() {
-        Image image = mImageReader.acquireLatestImage();
-        int width = image.getWidth();
-        int height = image.getHeight();
-        final Image.Plane[] planes = image.getPlanes();
-        final ByteBuffer buffer = planes[0].getBuffer();
-        int pixelStride = planes[0].getPixelStride();
-        int rowStride = planes[0].getRowStride();
-        int rowPadding = rowStride - pixelStride * width;
-        Bitmap bitmap = Bitmap.createBitmap(width + rowPadding / pixelStride, height, Bitmap.Config.ARGB_8888);
-        bitmap.copyPixelsFromBuffer(buffer);
-        bitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height);
-        image.close();
-        stopVirtual();
-        return bitmap;
     }
 
 

@@ -6,8 +6,8 @@ import android.content.Intent;
 import android.media.projection.MediaProjectionManager;
 import android.os.Build;
 
-import floatview.coder.allen.com.floatview.Service1;
-import floatview.coder.allen.com.floatview.view.FloatViewHandler;
+import floatview.coder.allen.com.floatview.FloatViewService;
+import floatview.coder.allen.com.floatview.view.UIFloatViewHandler;
 
 /**
  * Created by husongzhen on 17/12/11.
@@ -33,7 +33,8 @@ public class ShotManager {
     private Intent intent = null;
 
     private MediaProjectionManager mMediaProjectionManager;
-    private FloatViewHandler floatViewHandler;
+    private UIFloatViewHandler floatViewHandler;
+    private OnCutResutHandler resutHandler;
 
 
     public ShotManager requestPermiss(Activity activity) {
@@ -58,7 +59,7 @@ public class ShotManager {
             } else if (data != null && resultCode != 0) {
                 this.resultCode = resultCode;
                 this.intent = data;
-                Intent intent = new Intent(activity.getApplicationContext(), Service1.class);
+                Intent intent = new Intent(activity.getApplicationContext(), FloatViewService.class);
                 activity.startService(intent);
             }
         }
@@ -68,11 +69,11 @@ public class ShotManager {
     /**
      * @ set/get
      */
-    public FloatViewHandler getFloatViewHandler() {
+    public UIFloatViewHandler getFloatViewHandler() {
         return floatViewHandler;
     }
 
-    public ShotManager setFloatViewHandler(FloatViewHandler floatViewHandler) {
+    public ShotManager setFloatViewHandler(UIFloatViewHandler floatViewHandler) {
         this.floatViewHandler = floatViewHandler;
         return this;
     }
@@ -105,4 +106,12 @@ public class ShotManager {
     }
 
 
+    public OnCutResutHandler getResutHandler() {
+        return resutHandler;
+    }
+
+    public ShotManager setResutHandler(OnCutResutHandler resutHandler) {
+        this.resutHandler = resutHandler;
+        return this;
+    }
 }

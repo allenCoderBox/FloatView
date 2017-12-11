@@ -36,7 +36,7 @@
 
         <activity android:name=".ResultActivity" />
 
-        <service android:name=".Service1" />
+        <service android:name=".FloatViewService" />
     </application>
 
 </manifest>

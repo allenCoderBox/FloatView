@@ -25,7 +25,8 @@ public class ResultActivity extends AppCompatActivity {
 
     private void genericFile(String path) {
         final TextView textView = findViewById(R.id.text);
-        OrcClient.newInstance().generalFile(path)
+        OrcClient.newInstance()
+                .generalFile(path)
                 .subscribe(new Observer<String>() {
                     @Override
                     public void onCompleted() {
