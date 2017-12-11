@@ -13,7 +13,6 @@ import android.media.projection.MediaProjectionManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
-import android.os.Handler;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
 
@@ -26,6 +25,9 @@ import java.nio.ByteBuffer;
 import floatview.coder.allen.com.floatview.GlobalContext;
 import floatview.coder.allen.com.floatview.ResultActivity;
 import floatview.coder.allen.com.floatview.utils.DeviceInfor;
+import rx.Observable;
+import rx.Observer;
+import rx.Subscriber;
 
 import static android.content.ContentValues.TAG;
 
@@ -42,7 +44,6 @@ public class ShotScreen {
     private Intent mResultData;
     private int mResultCode;
     private VirtualDisplay mVirtualDisplay;
-    private String filePath;
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public void preShot() {
@@ -52,22 +53,32 @@ public class ShotScreen {
 
     public void startShotScreen() {
         startVirtual();
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                startCapture();
-            }
-        }, 500);
+        startCapture()
+                .subscribe(new Observer<String>() {
+                    @Override
+                    public void onCompleted() {
+
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+
+                    }
+
+                    @Override
+                    public void onNext(String s) {
+                        sendMediaFile(s);
+                        OpenFile(s);
+                    }
+                });
     }
 
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private void createVirtualEnvironment() {
-        filePath = getCutPath();
         mMediaProjectionManager1 = (MediaProjectionManager) GlobalContext.getContext().getSystemService(Context.MEDIA_PROJECTION_SERVICE);
         //ImageFormat.RGB_565
         mImageReader = ImageReader.newInstance(DeviceInfor.getSW(), DeviceInfor.getSH(), 0x1, 2);
-        Log.i(TAG, "prepared the virtual environment");
     }
 
 
@@ -81,11 +92,8 @@ public class ShotScreen {
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public void startVirtual() {
         if (mMediaProjection != null) {
-            Log.i(TAG, "want to display virtual");
             virtualDisplay();
         } else {
-            Log.i(TAG, "start screen capture intent");
-            Log.i(TAG, "want to build mediaprojection and display virtual");
             setUpMediaProjection();
             virtualDisplay();
         }
@@ -109,9 +117,21 @@ public class ShotScreen {
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    private void startCapture() {
-        Bitmap bitmap = readImageToBitmap();
-        Log.i(TAG, "image data captured");
+    private Observable<String> startCapture() {
+        return Observable.create(new Observable.OnSubscribe<String>() {
+            @Override
+            public void call(Subscriber<? super String> subscriber) {
+                Bitmap bitmap = readImageToBitmap();
+                String filePath = saveBitmap(bitmap);
+                if (filePath != null && !filePath.equals("")) {
+                    subscriber.onNext(filePath);
+                }
+            }
+        });
+    }
+
+    private String saveBitmap(Bitmap bitmap) {
+        String filePath = getCutPath();
         if (bitmap != null) {
             try {
                 File fileImage = new File(filePath);
@@ -124,21 +144,30 @@ public class ShotScreen {
                     bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
                     out.flush();
                     out.close();
-                    Intent media = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-                    Uri contentUri = Uri.fromFile(fileImage);
-                    media.setData(contentUri);
-                    GlobalContext.getContext().sendBroadcast(media);
-                    Intent intent = new Intent(GlobalContext.getContext(), ResultActivity.class);
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    intent.putExtra("file", filePath);
-                    GlobalContext.getContext().startActivity(intent);
                 }
+                return filePath;
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
+        return "";
+    }
+
+    private void OpenFile(String filePath) {
+        Intent intent = new Intent(GlobalContext.getContext(), ResultActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.putExtra("file", filePath);
+        GlobalContext.getContext().startActivity(intent);
+    }
+
+    private void sendMediaFile(String filePath) {
+        File fileImage = new File(filePath);
+        Intent media = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+        Uri contentUri = Uri.fromFile(fileImage);
+        media.setData(contentUri);
+        GlobalContext.getContext().sendBroadcast(media);
     }
 
 

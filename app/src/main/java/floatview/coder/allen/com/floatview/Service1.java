@@ -3,14 +3,9 @@ package floatview.coder.allen.com.floatview;
 import android.app.Service;
 import android.content.Intent;
 import android.graphics.PixelFormat;
-import android.hardware.display.VirtualDisplay;
-import android.media.ImageReader;
-import android.media.projection.MediaProjection;
-import android.media.projection.MediaProjectionManager;
 import android.os.Build;
 import android.os.IBinder;
 import android.support.annotation.RequiresApi;
-import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -18,8 +13,6 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
-
-import java.text.SimpleDateFormat;
 
 import floatview.coder.allen.com.floatview.shot.ShotScreen;
 
@@ -31,27 +24,6 @@ public class Service1 extends Service {
     private WindowManager mWindowManager = null;
     private LayoutInflater inflater = null;
     private ImageButton mFloatView = null;
-
-    private static final String TAG = "MainActivity";
-
-    private SimpleDateFormat dateFormat = null;
-    private String strDate = null;
-    private String pathImage = null;
-    private String nameImage = null;
-
-    private MediaProjection mMediaProjection = null;
-    private VirtualDisplay mVirtualDisplay = null;
-
-    public static int mResultCode = 0;
-    public static Intent mResultData = null;
-    public static MediaProjectionManager mMediaProjectionManager1 = null;
-
-    private WindowManager mWindowManager1 = null;
-    private int windowWidth = 0;
-    private int windowHeight = 0;
-    private ImageReader mImageReader = null;
-    private DisplayMetrics metrics = null;
-    private int mScreenDensity = 0;
     private LinearLayout mFloatLayout;
     private ShotScreen shotScreen;
 
