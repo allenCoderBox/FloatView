@@ -7,6 +7,7 @@ import android.view.WindowManager;
 
 import floatview.coder.allen.com.floatview.orc.OrcClient;
 import floatview.coder.allen.com.floatview.utils.DeviceInfor;
+import floatview.coder.allen.com.floatview.view.FloatViewHandler;
 
 
 /**
@@ -21,6 +22,10 @@ public class GlobalContext extends Application {
     private MediaProjectionManager mMediaProjectionManager;
 
 
+    public FloatViewHandler getHandler() {
+        return new FloatViewHandler();
+    }
+
     public interface OnScreenshotListener {
         void shot(String bitmap);
     }
@@ -32,17 +37,6 @@ public class GlobalContext extends Application {
         return context;
     }
 
-
-    private OnScreenshotListener onScreenshotListener;
-
-    public GlobalContext setOnScreenshotListener(OnScreenshotListener onScreenshotListener) {
-        this.onScreenshotListener = onScreenshotListener;
-        return this;
-    }
-
-    public OnScreenshotListener getOnScreenshotListener() {
-        return onScreenshotListener;
-    }
 
     @Override
     public void onCreate() {

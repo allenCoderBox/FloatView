@@ -33,16 +33,9 @@
             </intent-filter>
         </activity>
 
-        <receiver android:name=".BootBroadcastReceiver">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-            </intent-filter>
-        </receiver>
-
 
         <activity android:name=".ResultActivity" />
 
-        <!--<service android:name=".BackgroundService" />-->
         <service android:name=".Service1" />
     </application>
 
