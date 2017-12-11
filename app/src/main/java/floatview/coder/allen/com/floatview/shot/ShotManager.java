@@ -6,8 +6,8 @@ import android.content.Intent;
 import android.media.projection.MediaProjectionManager;
 import android.os.Build;
 
-import floatview.coder.allen.com.floatview.GlobalContext;
 import floatview.coder.allen.com.floatview.Service1;
+import floatview.coder.allen.com.floatview.view.FloatViewHandler;
 
 /**
  * Created by husongzhen on 17/12/11.
@@ -33,7 +33,49 @@ public class ShotManager {
     private Intent intent = null;
 
     private MediaProjectionManager mMediaProjectionManager;
+    private FloatViewHandler floatViewHandler;
 
+
+    public ShotManager requestPermiss(Activity activity) {
+        mMediaProjectionManager = (MediaProjectionManager) activity.getApplication().getSystemService(Context.MEDIA_PROJECTION_SERVICE);
+        if (intent != null && resultCode != 0) {
+            ShotManager.news().setIntent(intent).setResultCode(resultCode);
+        } else {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                activity.startActivityForResult(mMediaProjectionManager.createScreenCaptureIntent(), REQUEST_MEDIA_PROJECTION);
+                setmMediaProjectionManager(mMediaProjectionManager);
+            }
+        }
+
+        return this;
+    }
+
+
+    public void bindRsult(Activity activity, int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQUEST_MEDIA_PROJECTION) {
+            if (resultCode != Activity.RESULT_OK) {
+                return;
+            } else if (data != null && resultCode != 0) {
+                this.resultCode = resultCode;
+                this.intent = data;
+                Intent intent = new Intent(activity.getApplicationContext(), Service1.class);
+                activity.startService(intent);
+            }
+        }
+    }
+
+
+    /**
+     * @ set/get
+     */
+    public FloatViewHandler getFloatViewHandler() {
+        return floatViewHandler;
+    }
+
+    public ShotManager setFloatViewHandler(FloatViewHandler floatViewHandler) {
+        this.floatViewHandler = floatViewHandler;
+        return this;
+    }
 
     public int getResultCode() {
         return resultCode;
@@ -60,37 +102,6 @@ public class ShotManager {
     public ShotManager setmMediaProjectionManager(MediaProjectionManager mMediaProjectionManager) {
         this.mMediaProjectionManager = mMediaProjectionManager;
         return this;
-    }
-
-
-    public ShotManager requestPermiss(Activity activity) {
-        mMediaProjectionManager = (MediaProjectionManager) activity.getApplication().getSystemService(Context.MEDIA_PROJECTION_SERVICE);
-        if (intent != null && resultCode != 0) {
-            ShotManager.news().setIntent(intent).setResultCode(resultCode);
-        } else {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                activity.startActivityForResult(mMediaProjectionManager.createScreenCaptureIntent(), REQUEST_MEDIA_PROJECTION);
-                GlobalContext.getContext().setmMediaProjectionManager(mMediaProjectionManager);
-            }
-        }
-
-        return this;
-    }
-
-
-    public void bindRsult(Activity activity, int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQUEST_MEDIA_PROJECTION) {
-            if (resultCode != Activity.RESULT_OK) {
-                return;
-            } else if (data != null && resultCode != 0) {
-                this.resultCode = resultCode;
-                this.intent = data;
-                GlobalContext.getContext().setResult(resultCode);
-                GlobalContext.getContext().setIntent(data);
-                Intent intent = new Intent(activity.getApplicationContext(), Service1.class);
-                activity.startService(intent);
-            }
-        }
     }
 
 
