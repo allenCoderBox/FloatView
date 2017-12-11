@@ -45,7 +45,6 @@ public class ShotScreen {
     private int mResultCode;
     private VirtualDisplay mVirtualDisplay;
 
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public void preShot() {
         createVirtualEnvironment();
     }
@@ -74,11 +73,14 @@ public class ShotScreen {
     }
 
 
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private void createVirtualEnvironment() {
         mMediaProjectionManager1 = (MediaProjectionManager) GlobalContext.getContext().getSystemService(Context.MEDIA_PROJECTION_SERVICE);
         //ImageFormat.RGB_565
-        mImageReader = ImageReader.newInstance(DeviceInfor.getSW(), DeviceInfor.getSH(), 0x1, 2);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            mImageReader = ImageReader.newInstance(DeviceInfor.getSW(), DeviceInfor.getSH(), 0x1, 2);
+        } else {
+
+        }
     }
 
 
@@ -101,9 +103,9 @@ public class ShotScreen {
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     private void setUpMediaProjection() {
-        mResultData = GlobalContext.getContext().getIntent();
-        mResultCode = GlobalContext.getContext().getResult();
-        mMediaProjectionManager1 = GlobalContext.getContext().getmMediaProjectionManager();
+        mResultData = ShotManager.news().getIntent();
+        mResultCode = ShotManager.news().getResultCode();
+        mMediaProjectionManager1 = ShotManager.news().getmMediaProjectionManager();
         mMediaProjection = mMediaProjectionManager1.getMediaProjection(mResultCode, mResultData);
         Log.i(TAG, "mMediaProjection defined");
     }
