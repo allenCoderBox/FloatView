@@ -3,8 +3,10 @@ package floatview.coder.allen.com.floatview;
 import android.app.Application;
 import android.content.Intent;
 
+import com.iflytek.cloud.SpeechConstant;
+import com.iflytek.cloud.SpeechUtility;
+
 import floatview.coder.allen.com.floatview.orc.OrcClient;
-import floatview.coder.allen.com.floatview.shot.OnCutResutHandler;
 import floatview.coder.allen.com.floatview.shot.ShotManager;
 import floatview.coder.allen.com.floatview.utils.DeviceInfor;
 import floatview.coder.allen.com.floatview.view.FloatViewHandler;
@@ -31,12 +33,8 @@ public class GlobalContext extends Application {
         OrcClient.newInstance().init(this);
         DeviceInfor.init(this);
         ShotManager.news().setFloatViewHandler(new FloatViewHandler())
-                .setResutHandler(new OnCutResutHandler() {
-                    @Override
-                    public void onCutResutHandler(String filePath) {
-                        OpenFile(filePath);
-                    }
-                });
+                .setResutHandler(filePath -> OpenFile(filePath));
+        SpeechUtility.createUtility(context, SpeechConstant.APPID +"=5a2b4206");
     }
 
 
