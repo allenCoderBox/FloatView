@@ -5,6 +5,8 @@ import android.content.Intent;
 
 import com.iflytek.cloud.SpeechConstant;
 import com.iflytek.cloud.SpeechUtility;
+import com.orhanobut.logger.AndroidLogAdapter;
+import com.orhanobut.logger.Logger;
 
 import floatview.coder.allen.com.floatview.orc.OrcClient;
 import floatview.coder.allen.com.floatview.shot.ShotManager;
@@ -35,6 +37,12 @@ public class GlobalContext extends Application {
         ShotManager.news().setFloatViewHandler(new FloatViewHandler())
                 .setResutHandler(filePath -> OpenFile(filePath));
         SpeechUtility.createUtility(context, SpeechConstant.APPID +"=5a2b4206");
+        Logger.addLogAdapter(new AndroidLogAdapter() {
+            @Override
+            public boolean isLoggable(int priority, String tag) {
+                return BuildConfig.DEBUG;
+            }
+        });
     }
 
 

@@ -11,6 +11,8 @@ import com.baidu.ocr.sdk.model.GeneralResult;
 import com.baidu.ocr.sdk.model.WordSimple;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import rx.Observable;
 import rx.Subscriber;
@@ -47,16 +49,11 @@ public class OrcClient {
     }
 
 
-    public Observable<String> generalFile(final String filePath) {
-        return Observable.create(new Observable.OnSubscribe<String>() {
-            @Override
-            public void call(final Subscriber<? super String> subscriber) {
-                sendGeneral(subscriber, filePath);
-            }
-        });
+    public Observable<List<? extends String>> generalFile(final String filePath) {
+        return Observable.create(subscriber -> sendGeneral(subscriber, filePath));
     }
 
-    private void sendGeneral(final Subscriber<? super String> subscriber, String filePath) {
+    private void sendGeneral(final Subscriber<? super List<? extends String>> subscriber, String filePath) {
         GeneralBasicParams param = new GeneralBasicParams();
         param.setDetectDirection(true);
         param.setImageFile(new File(filePath));
@@ -65,16 +62,14 @@ public class OrcClient {
             @Override
             public void onResult(GeneralResult result) {
                 // 调用成功，返回GeneralResult对象
-                StringBuffer sb = new StringBuffer();
-
+                List<String> results = new ArrayList<>(result.getWordList().size());
                 for (WordSimple wordSimple : result.getWordList()) {
                     // wordSimple不包含位置信息
                     WordSimple word = wordSimple;
-                    sb.append(word.getWords());
-                    sb.append("\n");
+                    results.add(word.getWords());
                 }
                 // json格式返回字符串
-                subscriber.onNext(sb.toString());
+                subscriber.onNext(results);
             }
 
             @Override
